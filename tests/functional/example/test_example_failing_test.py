@@ -1,4 +1,5 @@
 import pytest
+import os
 from dbt.tests.util import run_dbt
 
 # our file contents
@@ -18,6 +19,11 @@ class TestExample:
        These define sequences of dbt commands and 'assert' statements.
     """
     
+    # install this repo as a package
+    @pytest.fixture(scope="class")
+    def packages(self):
+        return {"packages": [{"local": os.getcwd()}]}
+
     # configuration in dbt_project.yml
     @pytest.fixture(scope="class")
     def project_config_update(self):
@@ -43,26 +49,85 @@ class TestExample:
 
     # The actual sequence of dbt commands and assertions
     # pytest will take care of all "setup" + "teardown"
-    def test_run_seed_test(self, project):
+    def test__expected_failure__option_1a(self, project):
         """
-        Seed, then run, then test. We expect one of the tests to fail
+        Deps, then seed, then run, then test. We expect one of the tests to fail
         An alternative pattern is to use pytest "xfail" (see below)
+        Another alternative is to use `pytest.raises()` (see below)
         """
+        # install packages
+        run_dbt(["deps"])
         # seed seeds
-        results = run_dbt(["seed"])
-        assert len(results) == 1
+        run_dbt(["seed"])
         # run models
-        results = run_dbt(["run"])
-        assert len(results) == 1
+        run_dbt(["run"])
         # test tests
-        results = run_dbt(["test"], expect_pass = False) # expect failing test
-        assert len(results) == 2
-        # validate that the results include one pass and one failure
+        results = run_dbt(["test"], expect_pass = False)  # expect failing test
         result_statuses = sorted(r.status for r in results)
-        assert result_statuses == ["fail", "pass"]
+
+        # we expect a single failure; nothing more, nothing less
+        assert result_statuses == ["fail"]
+
+    def test__expected_failure__option_1b(self, project):
+        """
+        Deps, then build (which includes seed, run, and test). We expect one of the tests to fail
+        An alternative pattern is to use pytest "xfail" (see below)
+        Another alternative is to use `pytest.raises()` (see below)
+        """
+        # install packages
+        run_dbt(["deps"])
+        # build
+        results = run_dbt(["build"], expect_pass = False)  # expect failing test
+        result_statuses = sorted(r.status for r in results)
+
+        # expect test to fail after seed and run succeed
+        assert result_statuses == ["fail", "success", "success"]
+
+        # this would also work instead of an explicit list of statuses
+        assert "fail" in result_statuses
+
+        # or count the number of expected failures
+        assert result_statuses.count("fail") == 1
 
     @pytest.mark.xfail
-    def test_build(self, project):
-        """Expect a failing test"""
-        # do it all
-        results = run_dbt(["build"])
+    def test__expected_failure__option_2a(self, project):
+        """Expect a failing test using xfail with any Exception"""
+        # install packages
+        run_dbt(["deps"])
+        # seed, run, test
+        run_dbt(["build"])
+
+    @pytest.mark.xfail(raises=AssertionError)
+    def test__expected_failure__option_2b(self, project):
+        """Expect a failing test using xfail with a specific Exception"""
+        # install packages
+        run_dbt(["deps"])
+        # seed, run, test
+        run_dbt(["build"])
+
+    def test__expected_failure__option_3a(self, project):
+        """Expect a failing test using a specific Exception"""
+        # install packages
+        run_dbt(["deps"])
+
+        with pytest.raises(AssertionError):
+            # seed, run, test
+            run_dbt(["build"])
+
+    def test__expected_failure__option_3b(self, project):
+        """Expect a failing test using a specific Exception and message"""
+        # install packages
+        run_dbt(["deps"])
+
+        with pytest.raises(AssertionError, match=r"dbt exit state did not match expected"):
+            # seed, run, test
+            run_dbt(["build"])
+
+    def test__expected_failure__option_3c(self, project):
+        """Expect a failing test using any Exception"""
+        # install packages
+        run_dbt(["deps"])
+
+        with pytest.raises(Exception):
+            # seed, run, test
+            run_dbt(["build"])
