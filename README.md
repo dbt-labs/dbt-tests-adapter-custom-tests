@@ -9,6 +9,11 @@ It also introduces these concepts:
 - Modifying test cases
 - Running with multiple profiles
 
+## Caveat
+This repo is intended for demo use only as a point-in-time example using the `dbt-tests-adapter` framework with no guarantees that it will be maintained over time.
+
+If you want to use code from this repository in your own project, you're encouraged to just copy-paste (rather than clone or fork) :)
+
 ## Install
 
 See [here](https://docs.python.org/3/library/venv.html#creating-virtual-environments) for instructions that will work for your operating system and shell. These instructions are for `zsh` and `bash`:
