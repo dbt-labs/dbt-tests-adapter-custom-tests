@@ -9,8 +9,9 @@ from tests.functional.example.fixtures import (
     my_model_yml,
 )
 
+
 # class must begin with 'Test'
-class TestExample:
+class TestGenericTestExample:
     """
     Methods in this class will be of two types:
     1. Fixtures defining the dbt "project" for this test case.
@@ -62,7 +63,7 @@ class TestExample:
         # run models
         run_dbt(["run"])
         # test tests
-        results = run_dbt(["test"], expect_pass = False)  # expect failing test
+        results = run_dbt(["test", "--select", "test_type:generic"], expect_pass = False)  # expect failing test
         result_statuses = sorted(r.status for r in results)
 
         # we expect a single failure; nothing more, nothing less
@@ -77,7 +78,7 @@ class TestExample:
         # install packages
         run_dbt(["deps"])
         # build
-        results = run_dbt(["build"], expect_pass = False)  # expect failing test
+        results = run_dbt(["build", "--exclude", "test_type:singular"], expect_pass = False)  # expect failing test
         result_statuses = sorted(r.status for r in results)
 
         # expect test to fail after seed and run succeed
@@ -130,4 +131,36 @@ class TestExample:
 
         with pytest.raises(Exception):
             # seed, run, test
+            run_dbt(["build"])
+
+
+class TestSingularTestExample:
+    @pytest.fixture(scope="class")
+    def packages(self):
+        return {"packages": [{"local": os.getcwd()}]}
+
+    @pytest.fixture(scope="class")
+    def project_config_update(self):
+        return {
+          "name": "example",
+          "models": {"+materialized": "view"}
+        }
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        return {
+            "my_seed.csv": my_seed_csv,
+        }
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        return {
+            "my_model.sql": my_model_sql,
+        }
+
+    def test__expected_failure__option_3c(self, project):
+        """Expect a failing test using any Exception"""
+        run_dbt(["deps"])
+
+        with pytest.raises(AssertionError):
             run_dbt(["build"])
