@@ -22,6 +22,5 @@ models:
     columns:
       - name: id
         tests:
-          - unique
-          - not_null  # this test will fail
+          - generic_test_demo.custom_not_null  # this test will fail
 """
