@@ -1,12 +1,19 @@
 import pytest
 import os
-from dbt.tests.util import run_dbt
+from pathlib import Path
+from dbt.tests.util import run_dbt, check_relations_equal
 
 # our file contents
 from tests.functional.example.fixtures import (
     my_seed_csv,
     my_model_sql,
     my_model_yml,
+)
+# complement a _real_ downstream model to test using fake upstream relations
+from tests.functional.example.fixture_model_unit_test import (
+    upstream_model_1,
+    upstream_model_2,
+    expected,
 )
 
 
@@ -164,3 +171,37 @@ class TestSingularTestExample:
 
         with pytest.raises(AssertionError):
             run_dbt(["build"])
+
+
+class TestModelBuildExample:
+
+    @pytest.fixture(scope="class")
+    def seeds(self):
+        # fake the upstream data used by the model
+        return {
+            "upstream_model_1.csv": upstream_model_1,
+            "upstream_model_2.csv": upstream_model_2,
+            "expected.csv": expected,
+        }
+
+    @pytest.fixture(scope="class")
+    def models(self):
+        # pull the actual SQL for the downstream model from the filesystem
+        model_name = "downstream_model.sql"
+        model_path = Path(f"models/example/{model_name}")
+        sql_contents = ""
+        with open(model_path) as f:
+            sql_contents = f.read()
+
+        return {
+            model_name: sql_contents,
+        }
+
+    def test__what_to_expect(self, project):
+        """TODO - Don't know what to expect!"""
+        # Install and build
+        run_dbt(["deps"])
+        run_dbt(["build"])
+
+        # check relations equal
+        check_relations_equal(project.adapter, ["downstream_model", "expected"])
