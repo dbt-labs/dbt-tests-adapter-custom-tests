@@ -1,6 +1,18 @@
+# ***Archival Notice***
+This repository has been archived.
+
+As a result all of its historical issues and PRs have been closed.
+
+Please *do not clone* this repo without understanding the risk in doing so:
+- It may have unaddressed security vulnerabilities
+- It may have unaddressed bugs
+
+<details>
+   <summary>Click for historical readme</summary>
+
 # Getting started with the dbt testing framework
 
-["Testing a new adapter"](https://docs.getdbt.com/docs/contributing/testing-a-new-adapter) describes three broad categories of tests enabled by the [`dbt-tests-adapter`](https://github.com/dbt-labs/dbt-core/tree/HEAD/tests/adapter) Python package:
+[&quot;Testing a new adapter&quot;](https://docs.getdbt.com/docs/contributing/testing-a-new-adapter) describes three broad categories of tests enabled by the [`dbt-tests-adapter`](https://github.com/dbt-labs/dbt-core/tree/HEAD/tests/adapter) Python package:
 - Basic tests for adapter plugins
 - Optional tests tests for adapter plugins
 - **Custom test cases** (this repo)
@@ -52,3 +64,4 @@ Here's a quick checklist of items to review:
 - [ ] Add `test.env` to the `.gitignore` file (since it will likely contain secrets)
 - [ ] Populate `test.env.sample` with the environment variables within `conftest.py::dbt_profile_target`
 - [ ] Review the contents of `requirements.txt` to deem if each entry is applicable
+
